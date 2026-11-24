@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, Inbox, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PlanDayDialog } from "@/components/agents/plan-day-dialog";
+import { TaskAiPanels } from "@/components/agents/task-ai-panels";
 import { EmptyState } from "@/components/empty-state";
 import { TaskDetailDialog } from "@/components/tasks/task-detail-dialog";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
@@ -161,7 +162,12 @@ export function TaskBoard() {
         }}
       />
       <PlanDayDialog open={planOpen} onOpenChange={setPlanOpen} onOpenTask={setOpenTaskId} />
-      <TaskDetailDialog taskId={openTaskId} onClose={() => setOpenTaskId(null)} onChanged={reload} />
+      <TaskDetailDialog
+        taskId={openTaskId}
+        onClose={() => setOpenTaskId(null)}
+        onChanged={reload}
+        renderAi={(props) => <TaskAiPanels {...props} />}
+      />
     </div>
   );
 }
