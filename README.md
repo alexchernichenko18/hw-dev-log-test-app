@@ -38,19 +38,19 @@ Open http://localhost:3000. **No other setup is needed**: no database server, no
   # restart npm run dev; env files are read at startup
   ```
 
-| Variable         | Required | Default            | Purpose                                                          |
-| ---------------- | -------- | ------------------ | ---------------------------------------------------------------- |
-| `OPENAI_API_KEY` | no       | —                  | Real LLM for all four agents. Empty = mock mode.                 |
-| `OPENAI_MODEL`   | no       | `gpt-4o-mini`      | Any OpenAI chat model with tool calling.                         |
-| `DATABASE_PATH`  | no       | `./data/devlog.db` | SQLite file. Created on first start.                             |
+| Variable         | Required | Default            | Purpose                                          |
+| ---------------- | -------- | ------------------ | ------------------------------------------------ |
+| `OPENAI_API_KEY` | no       | —                  | Real LLM for all four agents. Empty = mock mode. |
+| `OPENAI_MODEL`   | no       | `gpt-4o-mini`      | Any OpenAI chat model with tool calling.         |
+| `DATABASE_PATH`  | no       | `./data/devlog.db` | SQLite file. Created on first start.             |
 
-| Script              | What it does                                                              |
-| ------------------- | ------------------------------------------------------------------------- |
-| `npm run dev`       | Dev server                                                                |
-| `npm test`          | Unit + agent tests (Vitest, in-memory SQLite, scripted model — no network) |
-| `npm run typecheck` | `next typegen` + `tsc`                                                    |
-| `npm run lint`      | ESLint                                                                    |
-| `npm run build`     | Production build                                                          |
+| Script              | What it does                                                                |
+| ------------------- | --------------------------------------------------------------------------- |
+| `npm run dev`       | Dev server                                                                  |
+| `npm test`          | Unit + agent tests (Vitest, in-memory SQLite, scripted model — no network)  |
+| `npm run typecheck` | `next typegen` + `tsc`                                                      |
+| `npm run lint`      | ESLint                                                                      |
+| `npm run build`     | Production build                                                            |
 | `npm run db:reset`  | Delete the local database; it is recreated with demo data on the next start |
 
 ### The database
@@ -58,12 +58,12 @@ Open http://localhost:3000. **No other setup is needed**: no database server, no
 A single SQLite file, `data/devlog.db`, sits next to two WAL files (`-wal`, `-shm`). The whole `data/` folder is
 git-ignored, so every clone starts from the same demo data.
 
-| Situation | What happens |
-| --- | --- |
-| No database file (fresh clone) | Created, migrated and seeded with demo tasks on the first request. |
-| Empty or older-schema file | Migrated in place (`PRAGMA user_version`). Not seeded, so you'll see the empty state. |
-| Every task deleted | The board shows an empty state with *New task* and *AI inbox*; *Plan my day* answers "nothing to plan" without calling the model. |
-| You want the demo data back | Stop the dev server, `npm run db:reset`, start again. |
+| Situation                      | What happens                                                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| No database file (fresh clone) | Created, migrated and seeded with demo tasks on the first request.                                                                |
+| Empty or older-schema file     | Migrated in place (`PRAGMA user_version`). Not seeded, so you'll see the empty state.                                             |
+| Every task deleted             | The board shows an empty state with _New task_ and _AI inbox_; _Plan my day_ answers "nothing to plan" without calling the model. |
+| You want the demo data back    | Stop the dev server, `npm run db:reset`, start again.                                                                             |
 
 To look inside:
 
@@ -77,14 +77,14 @@ Read freely, but make changes through the app: the dev server holds the database
 
 ### Troubleshooting
 
-| Symptom | Fix |
-| --- | --- |
+| Symptom                                                          | Fix                                                                                              |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `npm install` fails building `better-sqlite3` / "engine" warning | Node is older than 22.12. Run `nvm install 22 && nvm use`, delete `node_modules`, install again. |
-| `Another next dev server is already running` | Next 16 allows one dev server per folder. Stop the other one, or open the URL it prints. |
-| Port 3000 is busy | `npm run dev -- -p 3001` |
-| Agents still say "Mock agent" after adding a key | The key must be in `.env.local` (not `.env.example`). Restart `npm run dev`. |
-| Agent request fails with "could not be reached" | Check the key, the model name and your network. The UI shows how far the agent got. |
-| Odd server errors right after pulling new code | Restart `npm run dev`. A long-running dev server can keep stale server modules. |
+| `Another next dev server is already running`                     | Next 16 allows one dev server per folder. Stop the other one, or open the URL it prints.         |
+| Port 3000 is busy                                                | `npm run dev -- -p 3001`                                                                         |
+| Agents still say "Mock agent" after adding a key                 | The key must be in `.env.local` (not `.env.example`). Restart `npm run dev`.                     |
+| Agent request fails with "could not be reached"                  | Check the key, the model name and your network. The UI shows how far the agent got.              |
+| Odd server errors right after pulling new code                   | Restart `npm run dev`. A long-running dev server can keep stale server modules.                  |
 
 ---
 
@@ -128,19 +128,19 @@ A single `tasks` table: `id, title, description, status, priority, notes, parent
 
 ### REST API
 
-| Method & path                     | Body / query                                            | Notes                                  |
-| --------------------------------- | ------------------------------------------------------- | -------------------------------------- |
-| `GET /api/tasks`                  | `?status=todo\|in-progress\|done&sort=priority\|createdAt&order=asc\|desc` | Top-level tasks + subtask progress |
-| `POST /api/tasks`                 | `{title, description?, status?, priority?, notes?, parentId?}` | 201                             |
-| `GET /api/tasks/:id`              |                                                         | Task with subtasks                     |
-| `PATCH /api/tasks/:id`            | any subset of the fields                                | Empty patch → 400                      |
-| `DELETE /api/tasks/:id`           |                                                         | 204, cascades to subtasks              |
-| `POST /api/tasks/:id/subtasks`    | `{subtasks: [{title, description?, priority?}]}`        | Atomic bulk create (agent B confirm)   |
-| `POST /api/inbox/apply`           | `{changes: [create \| update]}`                         | Atomic apply (agent D confirm)         |
-| `POST /api/agents/prioritize`     | `{context?}`                                            | Agent A                                |
-| `POST /api/agents/decompose`      | `{taskId, answers?}`                                    | Agent B                                |
-| `POST /api/agents/status-update`  | `{taskId, audience, note?}`                             | Agent C                                |
-| `POST /api/agents/inbox`          | `{text}`                                                | Agent D                                |
+| Method & path                    | Body / query                                                               | Notes                                |
+| -------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ |
+| `GET /api/tasks`                 | `?status=todo\|in-progress\|done&sort=priority\|createdAt&order=asc\|desc` | Top-level tasks + subtask progress   |
+| `POST /api/tasks`                | `{title, description?, status?, priority?, notes?, parentId?}`             | 201                                  |
+| `GET /api/tasks/:id`             |                                                                            | Task with subtasks                   |
+| `PATCH /api/tasks/:id`           | any subset of the fields                                                   | Empty patch → 400                    |
+| `DELETE /api/tasks/:id`          |                                                                            | 204, cascades to subtasks            |
+| `POST /api/tasks/:id/subtasks`   | `{subtasks: [{title, description?, priority?}]}`                           | Atomic bulk create (agent B confirm) |
+| `POST /api/inbox/apply`          | `{changes: [create \| update]}`                                            | Atomic apply (agent D confirm)       |
+| `POST /api/agents/prioritize`    | `{context?}`                                                               | Agent A                              |
+| `POST /api/agents/decompose`     | `{taskId, answers?}`                                                       | Agent B                              |
+| `POST /api/agents/status-update` | `{taskId, audience, note?}`                                                | Agent C                              |
+| `POST /api/agents/inbox`         | `{text}`                                                                   | Agent D                              |
 
 Errors have one shape: `{ error: { code, message, issues? } }`, with 400 for validation, 404 for an unknown task,
 422 for an invalid parent and 500 for anything unexpected. Agent errors add the partial `trace` and use 503 when the
@@ -176,7 +176,7 @@ Design choices that apply to every agent:
   rather than a single prompt.
 - **Tool errors are data, not exceptions.** Bad arguments, an unknown tool or a missing task come back to the model
   as `{error}` and it continues.
-- **Trace.** Every tool call is recorded with a one-line summary and shown in the UI under *How the agent got here*.
+- **Trace.** Every tool call is recorded with a one-line summary and shown in the UI under _How the agent got here_.
   That shows the user which tasks the agent actually read before answering.
 - **Read-only tools.** Agents propose and the user confirms. That is the main defence against a wrong answer.
 
@@ -192,27 +192,27 @@ All four agents work with a real key. Mock mode is the offline and CI fallback, 
 
 ### A · Plan my day (prioritization)
 
-*Header → **Plan my day**.* Optional free-text context ("3 focused hours, on-call after lunch").
+_Header → **Plan my day**._ Optional free-text context ("3 focused hours, on-call after lunch").
 
-| | |
-|---|---|
-| **Tools** | `get_board_overview`: all open tasks as compact briefs (priority, status, age in days, days since update, subtask progress) plus computed signals (stale in-progress, old todos, high priority not started). `list_tasks(status)`. `get_task(id)`: description, notes, subtasks. |
-| **Steps** | Overview → reads at least 2 candidates in full (notes often change the picture, e.g. "waiting on security review") → `finish_plan`. |
-| **Decision rules** (prompt) | Finish before starting (limit WIP). A stale in-progress task can beat a fresh high-priority one. Blocked → action `unblock`, not `continue`. Vague tasks don't go in focus. Old tasks are flagged, not ignored. Respect the user's context. |
-| **Stops when** | `finish_plan` passes validation, or after 8 steps. |
-| **Output** | `{summary, focus: [{taskId, action: finish\|continue\|unblock\|start, reason}] (1–3), later: [{taskId, reason}] (≤5), warnings[]}` |
-| **Validation** | zod plus a check that every `taskId` is an **open top-level** task and none appears twice. After the run, a deterministic guardrail lists board signals the plan didn't mention (see below). |
+|                             |                                                                                                                                                                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tools**                   | `get_board_overview`: all open tasks as compact briefs (priority, status, age in days, days since update, subtask progress) plus computed signals (stale in-progress, old todos, high priority not started). `list_tasks(status)`. `get_task(id)`: description, notes, subtasks. |
+| **Steps**                   | Overview → reads at least 2 candidates in full (notes often change the picture, e.g. "waiting on security review") → `finish_plan`.                                                                                                                                              |
+| **Decision rules** (prompt) | Finish before starting (limit WIP). A stale in-progress task can beat a fresh high-priority one. Blocked → action `unblock`, not `continue`. Vague tasks don't go in focus. Old tasks are flagged, not ignored. Respect the user's context.                                      |
+| **Stops when**              | `finish_plan` passes validation, or after 8 steps.                                                                                                                                                                                                                               |
+| **Output**                  | `{summary, focus: [{taskId, action: finish\|continue\|unblock\|start, reason}] (1–3), later: [{taskId, reason}] (≤5), warnings[]}`                                                                                                                                               |
+| **Validation**              | zod plus a check that every `taskId` is an **open top-level** task and none appears twice. After the run, a deterministic guardrail lists board signals the plan didn't mention (see below).                                                                                     |
 
 **Failure case: the model drops tasks silently.** With `gpt-4o-mini` the plan was good. It picked `unblock` for the
 auth migration because its notes say it's waiting on a security review, which mock mode can't see. But it left the
-high-priority memory-leak task (not started) and three tasks older than 14 days out of *focus*, *later* and
-*warnings* alike. A prompt can ask for completeness but can't guarantee it, so after the agent finishes,
+high-priority memory-leak task (not started) and three tasks older than 14 days out of _focus_, _later_ and
+_warnings_ alike. A prompt can ask for completeness but can't guarantee it, so after the agent finishes,
 `uncoveredSignals()` lists every stale, old or high-priority-not-started task the plan never mentions. The UI shows
 these as **"Not mentioned by the agent · flagged by DevLog"**, so the user can tell the model's reasoning apart from
 the system's checks.
 
 **Failure case: an invented id.** If the model returns an id it never saw (or a done task), `check()` rejects the
-answer and the model gets *"task 42 is not an open top-level task"*. After two failed repairs the request fails
+answer and the model gets _"task 42 is not an open top-level task"_. After two failed repairs the request fails
 with 502. The UI shows the error with the trace and a retry option. It never shows a plan that points at a
 non-existent task.
 
@@ -220,16 +220,16 @@ non-existent task.
 
 ### B · Break down with AI (decomposition)
 
-*Task dialog → **Suggest subtasks**.*
+_Task dialog → **Suggest subtasks**._
 
-| | |
-|---|---|
-| **Tools** | `get_task(id)`; `search_tasks(query)`: finds related work elsewhere on the board, so the agent doesn't duplicate it. |
-| **Finish tools** | `ask_clarification({reason, questions: [{question, options[]}] 1–3})` **or** `propose_subtasks({approach, subtasks: [{title, description, priority}] 2–8, assumptions[]})` |
-| **Steps** | Read the task → search the board → decide: is it too vague to split well? If yes, ask. If no, propose. |
+|                        |                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tools**              | `get_task(id)`; `search_tasks(query)`: finds related work elsewhere on the board, so the agent doesn't duplicate it.                                                                                                                                                                                                                                                                  |
+| **Finish tools**       | `ask_clarification({reason, questions: [{question, options[]}] 1–3})` **or** `propose_subtasks({approach, subtasks: [{title, description, priority}] 2–8, assumptions[]})`                                                                                                                                                                                                            |
+| **Steps**              | Read the task → search the board → decide: is it too vague to split well? If yes, ask. If no, propose.                                                                                                                                                                                                                                                                                |
 | **Clarification loop** | Asking ends the run. The UI shows the questions with clickable suggested answers, and the user's answers start a **new run** with the answers in the prompt. On that run `ask_clarification` **is not offered at all**, so the agent cannot ask a second round. The limit is enforced in code, not left to the model. The server keeps no session: the client sends the answers back. |
-| **Validation** | zod (2–8 items, verb-first titles), plus a check that no title duplicates an existing subtask or another proposed item. |
-| **Writes** | None. The user unchecks, renames or re-prioritizes items, then **Create N subtasks** calls the normal bulk endpoint in one transaction. |
+| **Validation**         | zod (2–8 items, verb-first titles), plus a check that no title duplicates an existing subtask or another proposed item.                                                                                                                                                                                                                                                               |
+| **Writes**             | None. The user unchecks, renames or re-prioritizes items, then **Create N subtasks** calls the normal bulk endpoint in one transaction.                                                                                                                                                                                                                                               |
 
 **Failure case: suggested answers that don't exist.** For "Improve performance · The app feels slow" the agent
 correctly asked what's slow and what the target is. But it offered options like "Home page" and "Profile page" for
@@ -245,21 +245,21 @@ and nothing is saved until you edit and confirm.
 
 ### C · Status update for Slack
 
-*Task dialog → **Status update for Slack**.* Audience: Team / Manager / Stakeholders, plus an optional "What's new?"
+_Task dialog → **Status update for Slack**._ Audience: Team / Manager / Stakeholders, plus an optional "What's new?"
 note.
 
-| | |
-|---|---|
-| **Tools** | `get_task(id)`; `assess_progress(id)`: computed signals such as subtask completion, days since update, stale flag, a blocker hint found in notes ("waiting", "review", "blocked"…), and whether the author just added a fresh note. |
-| **Steps** | Read → assess → choose the tone from the facts → `finish_update`. The model often makes both reads in one turn. |
-| **Output** | `{tone: shipped\|on-track\|heads-up\|blocked, message, blockers[], askForHelp}` |
-| **Validation** | zod (message ≤ 900 chars), plus checks: `shipped` only if the task is actually done; `blocked` must name at least one blocker; any `#123` in the message must be a real task. |
-| **Post-processing** | Markdown → Slack mrkdwn (`**bold**` → `*bold*`, headings, bullets) is done deterministically. The model kept emitting `**`, and code handles that more reliably than more prompting. |
-| **Writes** | None. The text is editable before **Copy for Slack**. |
+|                     |                                                                                                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tools**           | `get_task(id)`; `assess_progress(id)`: computed signals such as subtask completion, days since update, stale flag, a blocker hint found in notes ("waiting", "review", "blocked"…), and whether the author just added a fresh note. |
+| **Steps**           | Read → assess → choose the tone from the facts → `finish_update`. The model often makes both reads in one turn.                                                                                                                     |
+| **Output**          | `{tone: shipped\|on-track\|heads-up\|blocked, message, blockers[], askForHelp}`                                                                                                                                                     |
+| **Validation**      | zod (message ≤ 900 chars), plus checks: `shipped` only if the task is actually done; `blocked` must name at least one blocker; any `#123` in the message must be a real task.                                                       |
+| **Post-processing** | Markdown → Slack mrkdwn (`**bold**` → `*bold*`, headings, bullets) is done deterministically. The model kept emitting `**`, and code handles that more reliably than more prompting.                                                |
+| **Writes**          | None. The text is editable before **Copy for Slack**.                                                                                                                                                                               |
 
 **Failure case: tone that contradicts the news.** The first version computed "stale" only from `updated_at`. With a
-fresh note ("Found it: the mock server starts after the iframe, fix in review"), the model still wrote *"stale for
-6 days"* in a heads-up tone. Fix: an author note now counts as fresh progress (`freshNoteFromAuthor`), and the
+fresh note ("Found it: the mock server starts after the iframe, fix in review"), the model still wrote _"stale for
+6 days"_ in a heads-up tone. Fix: an author note now counts as fresh progress (`freshNoteFromAuthor`), and the
 prompt says the note overrides older signals. A mock-mode test covers it.
 
 **Failure case: jargon for stakeholders.** The Stakeholders audience still got "Docker image" and "crypto calls".
@@ -270,7 +270,7 @@ it is enforced only by the prompt. The UI's answer is that the message is always
 
 ### D · AI inbox (own idea)
 
-*Header → **AI inbox**.* Paste meeting notes, a Slack thread, a bug report or PR comments. There is an example
+_Header → **AI inbox**._ Paste meeting notes, a Slack thread, a bug report or PR comments. There is an example
 button.
 
 **Why it matters for an engineering team.** Most tasks aren't born in the tracker. They come up in stand-ups,
@@ -280,24 +280,24 @@ exactly the friction this product is meant to remove. Deciding whether an item i
 work or noise requires checking each item against the board, so it needs an agent: a single prompt can't look things
 up. The idea grew out of the "plan a goal from free text" feature of my previous project, adapted to team work.
 
-| | |
-|---|---|
-| **Tools** | `search_tasks(query)`: covers subtasks and done tasks too; `get_task(id)`. |
-| **Steps** | Extract action items → **one search per item** (in parallel within a turn) → read promising matches → `finish_triage`. The typical run is 3 turns with about 9 tool calls. |
-| **Per item** | `create` (new task), `update` (append a dated note to an existing task, optionally change its priority) or `skip` (already covered, done or not actionable), always with a `reason`. |
-| **Output** | `{summary, items: [{action, sourceQuote, title, description, priority, taskId, note, reason}] ≤12}` |
-| **Validation (hard)** | `sourceQuote` must be a **verbatim fragment of the input**, which rules out invented action items. `update`/`skip` must point at an existing task. A task is updated at most once. A `create` whose title matches an existing task **or subtask** is rejected with *"already exists as subtask of #2 #5, use update or skip"*. |
-| **Validation (soft)** | An `update` that shares no keywords with the task it points at is marked **Weak match**, starts unchecked, and offers "Create as a new task instead". |
-| **Writes** | Only selected rows, through `POST /api/inbox/apply`, in **one transaction**. Notes are prefixed `[YYYY-MM-DD, from inbox]`. |
+|                       |                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tools**             | `search_tasks(query)`: covers subtasks and done tasks too; `get_task(id)`.                                                                                                                                                                                                                                                     |
+| **Steps**             | Extract action items → **one search per item** (in parallel within a turn) → read promising matches → `finish_triage`. The typical run is 3 turns with about 9 tool calls.                                                                                                                                                     |
+| **Per item**          | `create` (new task), `update` (append a dated note to an existing task, optionally change its priority) or `skip` (already covered, done or not actionable), always with a `reason`.                                                                                                                                           |
+| **Output**            | `{summary, items: [{action, sourceQuote, title, description, priority, taskId, note, reason}] ≤12}`                                                                                                                                                                                                                            |
+| **Validation (hard)** | `sourceQuote` must be a **verbatim fragment of the input**, which rules out invented action items. `update`/`skip` must point at an existing task. A task is updated at most once. A `create` whose title matches an existing task **or subtask** is rejected with _"already exists as subtask of #2 #5, use update or skip"_. |
+| **Validation (soft)** | An `update` that shares no keywords with the task it points at is marked **Weak match**, starts unchecked, and offers "Create as a new task instead".                                                                                                                                                                          |
+| **Writes**            | Only selected rows, through `POST /api/inbox/apply`, in **one transaction**. Notes are prefixed `[YYYY-MM-DD, from inbox]`.                                                                                                                                                                                                    |
 
 **Failure case: a duplicate of a subtask.** On the first real run, the agent turned "load test on staging is next"
-into a **new task**, even though *Run load test on staging* already existed as a subtask of the auth migration. Its
+into a **new task**, even though _Run load test on staging_ already existed as a subtask of the auth migration. Its
 search had used the wrong terms. Two fixes: the prompt now requires one search per item with that item's own terms,
 and the duplicate-title check rejects the answer, so the model has to choose `update`. On the next run it updated
 subtask #5 instead.
 
 **Failure case: a plausible but wrong match.** "Add an alert when checkout error rate goes above 2%" was linked
-once to *Rate limiting for public API* and once to *Fix flaky checkout e2e test*. Both share a word with it ("rate",
+once to _Rate limiting for public API_ and once to _Fix flaky checkout e2e test_. Both share a word with it ("rate",
 "checkout"), so the keyword-overlap warning doesn't fire. A test in `agents.test.ts` documents this limit. Here the
 human review is the real safeguard. Each row shows the quote, the target task and the agent's reason side by side,
 and one click turns a wrong update into a new task.
@@ -310,12 +310,47 @@ I accept this: the result is a proposal, skips are shown with their reason, and 
 
 ## Рішення і компроміси
 
-<!--
-  This section is written by hand, without AI assistants — as the task requires.
-  Facts to cover are listed in docs/agent-log-notes.md → "Decisions log".
--->
+### Next.js
 
-_TODO (автор): написати самостійно._
+- Один проєкт для фронтенду та бекенду.
+- Не бачу необхідності піднімати окремий Express для такого масштабу застосунку.
+- Можливість перевикористати напрацювання з дипломного проєкту.
+
+### SQLite
+
+- Простий локальний запуск без додаткової інфраструктури.
+- На відміну від JSON, підтримує транзакції та зв’язки між сутностями.
+- Для більшого навантаження та декількох інстансів розглядав би PostgreSQL.
+- SQLite зберігає дані локально у файлі, що ускладнює горизонтальне масштабування та використання serverless-архітектури.
+- Одночасно записувати дані може лише один writer, але для однокористувацького застосунку це не є проблемою.
+
+### Архітектура агентів
+
+- Спільний runtime дозволяє не дублювати логіку виклику моделі, інструментів, валідації та обробки помилок.
+- Кожен агент має власний промпт, інструменти та бізнес-логіку.
+- Агенти не змінюють дані без підтвердження користувача, оскільки результат роботи LLM не завжди передбачуваний.
+- Все, що можна гарантувати на рівні коду, краще не делегувати промпту.
+
+### Структура даних та UI
+
+- Для підзадач достатньо parent_id, оскільки вони мають ту саму структуру, що й звичайні задачі.
+- Не бачу потреби підтримувати глибоку вкладеність у рамках цього продукту.
+- Збереження фільтрів та відкритої задачі в URL дозволяє не втрачати стан після перезавантаження сторінки та ділитися посиланнями.
+
+### OpenAI та mock-режим
+
+- Уже мав досвід інтеграції OpenAI у попередньому проєкті.
+- gpt-4o-mini достатньо для поточних сценаріїв з точки зору швидкості, вартості та підтримки tool calling.
+- Mock-режим дозволяє запустити та протестувати застосунок без API-ключа.
+
+### Що свідомо не реалізовано
+
+- Авторизація — за умовами ТЗ один користувач.
+- Історія змін — не є пріоритетом поточного функціоналу.
+- Streaming — пріоритетом була якість роботи агентів.
+- Збереження сесій — немає необхідності підтримувати додатковий стан на сервері.
+- Embeddings — для поточного обсягу даних достатньо пошуку за ключовими словами.
+- Деплой — не вимагався в рамках завдання.
 
 ---
 
