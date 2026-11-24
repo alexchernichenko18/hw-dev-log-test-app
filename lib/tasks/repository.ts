@@ -117,6 +117,12 @@ export class TaskRepository {
     return { ...this.getById(id), subtasks: this.listSubtasks(id) };
   }
 
+  /** Every task, subtasks included — used by agents for duplicate detection. */
+  listAll(): Task[] {
+    const rows = this.db.prepare(`SELECT * FROM tasks ORDER BY id ASC`).all() as TaskRow[];
+    return rows.map(toTask);
+  }
+
   listSubtasks(parentId: number): Task[] {
     const rows = this.db
       .prepare(`SELECT * FROM tasks WHERE parent_id = ? ORDER BY id ASC`)
