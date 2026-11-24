@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "db:reset": "node -e \"require('fs').rmSync('data',{recursive:true,force:true})\" && echo 'Database removed — it will be recreated with demo data on next start.'"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
