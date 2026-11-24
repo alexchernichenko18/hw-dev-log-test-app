@@ -169,7 +169,7 @@ export async function runInboxTriageAgent(repo: TaskRepository, text: string, no
 // Mock policy — line-based extraction + keyword search, no understanding.
 // ---------------------------------------------------------------------------
 
-const ACTION_LINE = /\b(need to|needs to|should|must|will|todo|action|fix|add|investigate|update|write|set up|follow up|look into|migrate|remove)\b/i;
+const ACTION_LINE = /\b(need|needs|asked|is next|should|must|will|todo|action|fix|add|investigate|update|write|set up|follow up|look into|migrate|remove)\b/i;
 const URGENT = /\b(urgent|asap|prod(uction)?|outage|incident|security|blocker|customers?)\b/i;
 
 export function extractActionLines(text: string): string[] {
