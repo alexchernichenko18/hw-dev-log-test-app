@@ -1,0 +1,52 @@
+# Agent log — raw notes
+
+Working notes kept during development. Source material for `AGENT_LOG.md` and for the
+README section "Рішення і компроміси" (that section is written by hand, without AI —
+the list below is only a factual reminder of what was decided).
+
+Coding agent: Claude Code (Opus) with the `superpowers` plugin (brainstorming / planning skills).
+
+---
+
+## Session 1 — 2026-11-24
+
+### Prompts (verbatim, translated where noted)
+
+1. Kick-off (UA, abridged): "On the desktop there is todo-ai (my diploma project) — we can take
+   most of it: UI, ideas, functions, AI keys. Now we're doing a test task [full ТЗ pasted].
+   Backend on Next.js API routes. Every point of the ТЗ matters. Make a step-by-step plan,
+   but first, as a separate step, parse my project so it's clear what we can borrow. Ask questions."
+2. "Why can't you write the README yourself? Also come up with D yourself, given my previous
+   project and the context of the ТЗ."
+3. "Yes, start step 1."
+
+### What the agent did
+
+- Step 0: read todo-ai, produced a borrow / don't-borrow table → `docs/plans/2026-11-24-devlog-roadmap.md`.
+  Found that todo-ai's AI is single-call structured output (not agentic) and that it has no `.env` with keys.
+- Asked 4 questions (LLM provider, storage, which AI features, language). Answers: OpenAI, SQLite, A+B+C, English.
+- Proposed feature D "Inbox triage" derived from todo-ai's "Plan a goal" (free text → task).
+- Step 1: installed deps, copied UI primitives + theme from todo-ai, `.env.example`, layout, vitest config.
+
+### Agent mistakes / things I had to correct
+
+- (fill in as they happen — need at least 2 concrete ones for AGENT_LOG)
+
+### Observations during step 1 (candidates for AGENT_LOG / README)
+
+- create-next-app's `.gitignore` has `.env*`, which silently ignores `.env.example` — the file the ТЗ
+  requires. Fixed with `!.env.example`, verified with `git check-ignore`.
+- `npm install -D vitest` failed with ERESOLVE: vitest 5 wants `@types/node` ≥ 22, the template pins `^20`.
+  Fixed by aligning `@types/node` with the actual runtime (Node 22) instead of `--force`.
+- Removed `experimental.agentFeedback` from `next.config.ts`: it makes `next dev` write an extra
+  managed block into AGENTS.md and open issue-report forms — noise for this repo.
+- `better-sqlite3` is already on Next's built-in `serverExternalPackages` list, so no config needed.
+
+### Decisions log (facts only — for the hand-written "Рішення і компроміси")
+
+- Backend: Next.js API routes (single process, no separate Express server).
+- Storage: SQLite via better-sqlite3 (native module; prebuilt binaries for common platforms).
+- LLM: OpenAI, `gpt-4o-mini` default, configurable via `OPENAI_MODEL`.
+- Agents without a key run in mock mode.
+- Features: A, B, C, D (Inbox triage). C is the first to cut if over budget.
+- Not taken from todo-ai: localStorage persistence, single-call AI, learning-specific features, drag-and-drop.
