@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Inbox, Plus } from "lucide-react";
+import { CalendarCheck, Inbox, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { PlanDayDialog } from "@/components/agents/plan-day-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { TaskDetailDialog } from "@/components/tasks/task-detail-dialog";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
@@ -68,6 +69,7 @@ export function TaskBoard() {
     order,
   });
   const [createOpen, setCreateOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
 
   async function handleStatusChange(id: number, next: TaskStatus) {
     const previous = tasks.find((task) => task.id === id)?.status;
@@ -93,6 +95,10 @@ export function TaskBoard() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button variant="outline" onClick={() => setPlanOpen(true)}>
+            <CalendarCheck className="text-ai" />
+            Plan my day
+          </Button>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus />
             New task
@@ -154,6 +160,7 @@ export function TaskBoard() {
           setOpenTaskId(id);
         }}
       />
+      <PlanDayDialog open={planOpen} onOpenChange={setPlanOpen} onOpenTask={setOpenTaskId} />
       <TaskDetailDialog taskId={openTaskId} onClose={() => setOpenTaskId(null)} onChanged={reload} />
     </div>
   );
