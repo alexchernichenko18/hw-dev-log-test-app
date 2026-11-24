@@ -96,7 +96,7 @@ export function TaskBoard() {
           </h1>
           <p className="text-sm text-muted-foreground">Engineering task tracker with AI agents</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ThemeToggle />
           <Button variant="outline" onClick={() => setInboxOpen(true)}>
             <MessageSquarePlus className="text-ai" />

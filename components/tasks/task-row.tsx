@@ -34,7 +34,7 @@ export function TaskRow({ task, onOpen, onStatusChange }: TaskRowProps) {
         ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <PriorityBadge priority={task.priority} />
-          <span title={new Date(task.createdAt).toLocaleString()}>Created {formatAge(task.createdAt)} ago</span>
+          <span title={new Date(task.createdAt).toLocaleString()}>Created {formatAge(task.createdAt)}</span>
           {task.subtaskCount > 0 ? (
             <span className="inline-flex items-center gap-1">
               <ListChecks className="size-3.5" />

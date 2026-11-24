@@ -4,11 +4,11 @@ export function ageInDays(iso: string, now: Date = new Date()): number {
   return Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS));
 }
 
-/** "today", "1 day", "12 days" — compact age of a task. */
+/** "today", "1 day ago", "12 days ago" — compact age of a task. */
 export function formatAge(iso: string, now: Date = new Date()): string {
   const days = ageInDays(iso, now);
   if (days === 0) return "today";
-  return days === 1 ? "1 day" : `${days} days`;
+  return days === 1 ? "1 day ago" : `${days} days ago`;
 }
 
 export function formatDateTime(iso: string): string {
