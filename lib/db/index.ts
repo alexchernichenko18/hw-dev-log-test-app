@@ -43,7 +43,8 @@ export function openDatabase(file: string): Db {
 }
 
 function resolveDatabasePath(): string {
-  return path.resolve(process.cwd(), process.env.DATABASE_PATH ?? "./data/devlog.db");
+  // Runtime data, not source: tell Turbopack not to trace the project directory for it.
+  return path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.DATABASE_PATH ?? "./data/devlog.db");
 }
 
 // Next.js dev mode re-evaluates modules on every change; keep one connection per process.
