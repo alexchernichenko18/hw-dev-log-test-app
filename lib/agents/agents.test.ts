@@ -143,3 +143,13 @@ describe("prioritize guardrail", () => {
     expect(mentions(flaky)).toBe(false);
   });
 });
+
+describe("empty board", () => {
+  it("plan my day answers without calling the model when nothing is open", async () => {
+    const empty = new TaskRepository(openDatabase(":memory:"));
+    const result = await runPrioritizeAgent(empty, {}, NOW);
+    expect(result.steps).toBe(0);
+    expect(result.plan.focus).toEqual([]);
+    expect(result.plan.summary).toMatch(/no open tasks/i);
+  });
+});

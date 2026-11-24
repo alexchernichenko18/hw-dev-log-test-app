@@ -131,9 +131,10 @@ function PlanResult({
     <div className="grid gap-5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm leading-relaxed">{plan.summary}</p>
-        <AgentBadge meta={result} />
+        {result.steps > 0 ? <AgentBadge meta={result} /> : null}
       </div>
 
+      {plan.focus.length > 0 ? (
       <section className="grid gap-2">
         <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Focus today</h3>
         <ol className="grid gap-2">
@@ -167,6 +168,7 @@ function PlanResult({
           ))}
         </ol>
       </section>
+      ) : null}
 
       {plan.later.length > 0 ? (
         <section className="grid gap-2">

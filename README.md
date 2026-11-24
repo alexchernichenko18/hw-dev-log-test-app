@@ -18,16 +18,25 @@ decides what to do next from what it finds, and has its output validated before 
 
 ## Quick start
 
+Requires **Node.js 22.12+** (`node -v`). There's an `.nvmrc`, so `nvm use` works.
+
 ```bash
+git clone <repo-url> devlog && cd devlog
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000. On first start the app creates `data/devlog.db` and fills it with demo tasks of
-different ages and states, so every agent has something to reason about right away.
+Open http://localhost:3000. **No other setup is needed**: no database server, no migrations to run, no key.
 
-**AI key.** Copy `.env.example` to `.env.local` and set `OPENAI_API_KEY`, then restart `npm run dev`. Without a key
-everything still runs: the agents switch to **mock mode** (see [below](#mock-mode)), and the UI labels it.
+- **Database:** created automatically on first start (`data/devlog.db`) and filled with demo tasks of different ages
+  and states, so every agent has something to reason about right away.
+- **AI:** without a key the agents run in **mock mode** (see [below](#mock-mode)), and the UI labels it. For real
+  agents:
+
+  ```bash
+  cp .env.example .env.local     # then set OPENAI_API_KEY=sk-...
+  # restart npm run dev; env files are read at startup
+  ```
 
 | Variable         | Required | Default            | Purpose                                                          |
 | ---------------- | -------- | ------------------ | ---------------------------------------------------------------- |
@@ -42,10 +51,40 @@ everything still runs: the agents switch to **mock mode** (see [below](#mock-mod
 | `npm run typecheck` | `next typegen` + `tsc`                                                    |
 | `npm run lint`      | ESLint                                                                    |
 | `npm run build`     | Production build                                                          |
-| `npm run db:reset`  | Delete the local database; demo data is re-seeded on next start           |
+| `npm run db:reset`  | Delete the local database; it is recreated with demo data on the next start |
 
-Requires **Node.js 22.12+** (`better-sqlite3` 13 and Vitest 5 need it; there's an `.nvmrc`). `better-sqlite3` ships
-prebuilt binaries for macOS, Linux and Windows, so no compiler is needed.
+### The database
+
+A single SQLite file, `data/devlog.db`, sits next to two WAL files (`-wal`, `-shm`). The whole `data/` folder is
+git-ignored, so every clone starts from the same demo data.
+
+| Situation | What happens |
+| --- | --- |
+| No database file (fresh clone) | Created, migrated and seeded with demo tasks on the first request. |
+| Empty or older-schema file | Migrated in place (`PRAGMA user_version`). Not seeded, so you'll see the empty state. |
+| Every task deleted | The board shows an empty state with *New task* and *AI inbox*; *Plan my day* answers "nothing to plan" without calling the model. |
+| You want the demo data back | Stop the dev server, `npm run db:reset`, start again. |
+
+To look inside:
+
+```bash
+sqlite3 -header -column data/devlog.db "select id, title, status, priority, parent_id from tasks;"   # sqlite3 ships with macOS
+```
+
+…or open `data/devlog.db` in a GUI: [DB Browser for SQLite](https://sqlitebrowser.org/)
+(`brew install --cask db-browser-for-sqlite`), TablePlus, or the "SQLite Viewer" extension in VS Code / Cursor.
+Read freely, but make changes through the app: the dev server holds the database open.
+
+### Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `npm install` fails building `better-sqlite3` / "engine" warning | Node is older than 22.12. Run `nvm install 22 && nvm use`, delete `node_modules`, install again. |
+| `Another next dev server is already running` | Next 16 allows one dev server per folder. Stop the other one, or open the URL it prints. |
+| Port 3000 is busy | `npm run dev -- -p 3001` |
+| Agents still say "Mock agent" after adding a key | The key must be in `.env.local` (not `.env.example`). Restart `npm run dev`. |
+| Agent request fails with "could not be reached" | Check the key, the model name and your network. The UI shows how far the agent got. |
+| Odd server errors right after pulling new code | Restart `npm run dev`. A long-running dev server can keep stale server modules. |
 
 ---
 

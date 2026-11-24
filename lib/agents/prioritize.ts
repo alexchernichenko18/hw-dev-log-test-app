@@ -65,6 +65,18 @@ export async function runPrioritizeAgent(repo: TaskRepository, input: Prioritize
   const openTasks = () =>
     repo.list({ sort: "priority", order: "desc" }).filter((task) => task.status !== "done");
 
+  // Nothing to plan: answer directly instead of spending model calls on an impossible task
+  // (the output contract requires at least one focus item).
+  if (openTasks().length === 0) {
+    const plan: DayPlan = {
+      summary: "There are no open tasks — nothing to plan. Create a task or paste meeting notes into the AI inbox.",
+      focus: [],
+      later: [],
+      warnings: [],
+    };
+    return { finish: { tool: "finish_plan", output: plan }, trace: [], steps: 0, model: "none", plan, systemWarnings: [] };
+  }
+
   const getBoardOverview = defineTool({
     name: "get_board_overview",
     description:
