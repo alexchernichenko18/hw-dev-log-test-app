@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
         focus: result.plan.focus.map(withTask),
         later: result.plan.later.map(withTask),
       },
+      systemWarnings: result.systemWarnings,
       ...agentMeta(result),
     });
   } catch (error) {

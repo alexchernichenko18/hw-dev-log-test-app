@@ -16,6 +16,7 @@ import type { Task } from "@/lib/tasks/types";
 
 type TaskRef = Pick<Task, "id" | "title" | "status" | "priority">;
 type PlanResponse = {
+  systemWarnings: string[];
   plan: Omit<DayPlan, "focus" | "later"> & {
     focus: (DayPlan["focus"][number] & { task: TaskRef })[];
     later: (DayPlan["later"][number] & { task: TaskRef })[];
@@ -48,7 +49,7 @@ export function PlanDayDialog({ open, onOpenChange, onOpenTask }: PlanDayDialogP
   async function run() {
     setState({ kind: "running" });
     try {
-      const result = await callAgent<Pick<PlanResponse, "plan">>("/api/agents/prioritize", {
+      const result = await callAgent<Pick<PlanResponse, "plan" | "systemWarnings">>("/api/agents/prioritize", {
         context: context.trim() || undefined,
       });
       setState({ kind: "done", result });
@@ -195,6 +196,19 @@ function PlanResult({
           {plan.warnings.map((warning, index) => (
             <p key={index} className="flex gap-2 text-sm">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-priority-medium" />
+              {warning}
+            </p>
+          ))}
+        </section>
+      ) : null}
+
+      {result.systemWarnings.length > 0 ? (
+        <section className="grid gap-1.5 rounded-lg border border-dashed p-3">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Not mentioned by the agent · flagged by DevLog
+          </h3>
+          {result.systemWarnings.map((warning, index) => (
+            <p key={index} className="text-sm text-muted-foreground">
               {warning}
             </p>
           ))}

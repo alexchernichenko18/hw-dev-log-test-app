@@ -145,7 +145,37 @@ export async function runPrioritizeAgent(repo: TaskRepository, input: Prioritize
     maxSteps: 8,
   });
 
-  return { ...result, plan: result.finish.output as DayPlan };
+  const plan = result.finish.output as DayPlan;
+  return { ...result, plan, systemWarnings: uncoveredSignals(repo.list({ sort: "priority", order: "desc" }).map((t) => toBrief(t, now)), plan) };
+}
+
+/**
+ * Guardrail: board signals the model did not mention anywhere (focus, later or warnings).
+ * Observed with gpt-4o-mini — it sometimes silently drops an old or high-priority task.
+ * These are computed, not generated, and shown separately as "flagged by DevLog".
+ */
+export function uncoveredSignals(tasks: TaskBrief[], plan: DayPlan): string[] {
+  const mentioned = new Set<number>([...plan.focus, ...plan.later].map((item) => item.taskId));
+  for (const warning of plan.warnings) {
+    for (const match of warning.matchAll(/#(\d+)/g)) mentioned.add(Number(match[1]));
+  }
+  const open = tasks.filter((t) => t.status !== "done" && !mentioned.has(t.id));
+  const label = (t: TaskBrief) => `#${t.id} “${t.title}”`;
+  const days = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
+
+  const warnings: string[] = [];
+  for (const task of open) {
+    if (task.status === "in-progress" && task.daysSinceUpdate >= STALE_IN_PROGRESS_DAYS) {
+      warnings.push(`${label(task)} is in progress with no updates for ${days(task.daysSinceUpdate)}.`);
+    } else if (task.status === "todo" && task.priority === "high") {
+      warnings.push(`${label(task)} is high priority and not started (${days(task.ageDays)} old).`);
+    }
+  }
+  const old = open.filter((t) => t.status === "todo" && t.priority !== "high" && t.ageDays >= OLD_TODO_DAYS);
+  if (old.length > 0) {
+    warnings.push(`Waiting ${OLD_TODO_DAYS}+ days: ${old.map(label).join(", ")} — schedule or drop.`);
+  }
+  return warnings;
 }
 
 // ---------------------------------------------------------------------------

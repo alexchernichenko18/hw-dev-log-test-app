@@ -123,3 +123,23 @@ describe("inbox triage agent", () => {
     expect(sharedTerms(repo, { sourceQuote: "Ramen on Friday", note: null }, rateLimiting)).toEqual([]);
   });
 });
+
+describe("prioritize guardrail", () => {
+  it("flags signals the plan did not mention", async () => {
+    const { uncoveredSignals } = await import("@/lib/agents/prioritize");
+    const { toBrief } = await import("@/lib/agents/task-context");
+    const briefs = repo.list({ sort: "priority", order: "desc" }).map((t) => toBrief(t, NOW));
+    const leak = idByTitle("Investigate memory leak in worker service");
+    const flaky = idByTitle("Fix flaky checkout e2e test");
+
+    const warnings = uncoveredSignals(briefs, {
+      summary: "x",
+      focus: [{ taskId: flaky, action: "finish", reason: "x" }],
+      later: [],
+      warnings: [],
+    });
+    const mentions = (id: number) => warnings.some((w) => new RegExp(`#${id}\\b`).test(w));
+    expect(mentions(leak)).toBe(true);
+    expect(mentions(flaky)).toBe(false);
+  });
+});
