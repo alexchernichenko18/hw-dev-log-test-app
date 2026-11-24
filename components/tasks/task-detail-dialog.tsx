@@ -207,7 +207,7 @@ function TaskDetailBody({
   const doneCount = task.subtasks.filter((s) => s.status === "done").length;
 
   return (
-    <div className="grid gap-5 lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
+    <div className="grid gap-5">
       <DialogHeader>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="font-mono">#{task.id}</span>
@@ -223,8 +223,8 @@ function TaskDetailBody({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="grid gap-6 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <div className="grid content-start gap-5 lg:min-h-0 lg:overflow-y-auto lg:pr-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        <div className="grid content-start gap-5">
           <form onSubmit={handleSave} className="grid gap-4">
             <Input
               aria-label="Title"
@@ -385,12 +385,16 @@ function TaskDetailBody({
         </div>
 
         {renderAi ? (
-          <aside
-            className="grid content-start gap-5 rounded-xl border bg-muted/20 p-4 lg:min-h-0 lg:overflow-y-auto"
-            aria-label="AI actions"
-          >
-            {renderAi({ task, onChanged: refresh })}
-          </aside>
+          <div className="lg:relative lg:min-h-[26rem]">
+            {/* Desktop: the left column sets the row height; the AI column fills it and scrolls inside.
+                Mobile: columns stack and the whole dialog scrolls. */}
+            <aside
+              className="grid content-start gap-5 rounded-xl border bg-muted/20 p-4 lg:absolute lg:inset-0 lg:overflow-y-auto"
+              aria-label="AI actions"
+            >
+              {renderAi({ task, onChanged: refresh })}
+            </aside>
+          </div>
         ) : null}
       </div>
 
@@ -413,8 +417,7 @@ export function TaskDetailDialog({
 }: TaskDetailDialogProps) {
   return (
     <Dialog open={taskId !== null} onOpenChange={(open) => !open && onClose()}>
-      {/* Mobile: the whole dialog scrolls. Desktop: fixed height, each column scrolls on its own. */}
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:h-[90vh] lg:max-w-6xl lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-6xl">
         {taskId !== null ? (
           <TaskDetailBody
             key={taskId}

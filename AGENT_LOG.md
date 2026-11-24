@@ -58,7 +58,9 @@ requirements in the task statement.
 6. **Small layout fixes:** the model badge wrapped onto three lines; the reasons under "Can wait" were truncated;
    priority selects had different widths in each proposal row; an input placeholder was cut off.
 7. **The whole dialog scrolled together** (my review, from a screenshot): a long AI proposal pushed the task form off
-   screen. On desktop the dialog now has a fixed height and each column scrolls on its own; mobile keeps one scroll.
+   screen. The first fix (a fixed-height dialog with two scrolling columns) left a big empty area under a short form,
+   so on review I asked for the left column to set the height. The AI column is now absolutely positioned inside
+   that row and scrolls on its own. Mobile keeps one scroll.
 8. **Grayscale theme.** todo-ai's theme had no color at all (even `destructive` was gray). Semantic tokens were added
    for priority, status and AI, so a high-priority or blocked item stands out in the list.
 
