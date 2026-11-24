@@ -62,3 +62,31 @@ describe("decompose agent (mock model)", () => {
     expect(result.outcome.kind).toBe("proposal");
   });
 });
+
+describe("status update agent", () => {
+  it("converts Markdown to Slack mrkdwn", async () => {
+    const { toSlackMrkdwn } = await import("@/lib/agents/status-update");
+    expect(toSlackMrkdwn("## Title\n**bold** text\n- item")).toBe("*Title*\n*bold* text\n• item");
+  });
+
+  it("(mock) picks 'blocked' from notes and never claims shipped for open work", async () => {
+    const { runStatusUpdateAgent } = await import("@/lib/agents/status-update");
+    const result = await runStatusUpdateAgent(
+      repo,
+      { taskId: idByTitle("Migrate auth service to Node 22"), audience: "team" },
+      NOW,
+    );
+    expect(result.update.tone).toBe("blocked");
+    expect(result.update.blockers.length).toBeGreaterThan(0);
+  });
+
+  it("(mock) treats an author note as fresh progress, not stale", async () => {
+    const { runStatusUpdateAgent } = await import("@/lib/agents/status-update");
+    const result = await runStatusUpdateAgent(
+      repo,
+      { taskId: idByTitle("Fix flaky checkout e2e test"), audience: "team", note: "Root cause found, fix in progress" },
+      NOW,
+    );
+    expect(result.update.tone).toBe("on-track");
+  });
+});
