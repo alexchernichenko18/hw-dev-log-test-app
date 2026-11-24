@@ -90,3 +90,36 @@ describe("status update agent", () => {
     expect(result.update.tone).toBe("on-track");
   });
 });
+
+describe("inbox triage agent", () => {
+  it("(mock) extracts action lines, ignores chit-chat and links known work", async () => {
+    const { runInboxTriageAgent } = await import("@/lib/agents/inbox-triage");
+    const text = [
+      "- Worker service memory leak is hitting prod again, need to investigate today",
+      "- We should add an alert when checkout error rate goes above 2%",
+      "- Lunch on Friday at the ramen place",
+    ].join("\n");
+    const result = await runInboxTriageAgent(repo, text, NOW);
+
+    expect(result.triage.items).toHaveLength(2);
+    const leak = result.triage.items[0];
+    expect(leak.action).toBe("update");
+    expect(leak.taskId).toBe(idByTitle("Investigate memory leak in worker service"));
+    expect(leak.priority).toBe("high");
+  });
+
+  it("detects same-title duplicates, including subtasks", async () => {
+    const { findSameTitle } = await import("@/lib/agents/inbox-triage");
+    expect(findSameTitle(repo, "run load test on staging!")?.parentId).not.toBeNull();
+    expect(findSameTitle(repo, "Add an alert for checkout errors")).toBeNull();
+  });
+
+  it("flags links that share no terms with the target task", async () => {
+    const { sharedTerms } = await import("@/lib/agents/inbox-triage");
+    const rateLimiting = idByTitle("Rate limiting for public API");
+    expect(sharedTerms(repo, { sourceQuote: "Add alert for checkout error rate", note: null }, rateLimiting)).toEqual([
+      "rate",
+    ]);
+    expect(sharedTerms(repo, { sourceQuote: "Ramen on Friday", note: null }, rateLimiting)).toEqual([]);
+  });
+});

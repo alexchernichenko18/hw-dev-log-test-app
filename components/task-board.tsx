@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarCheck, Inbox, Plus } from "lucide-react";
+import { CalendarCheck, Inbox, MessageSquarePlus, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { InboxDialog } from "@/components/agents/inbox-dialog";
 import { PlanDayDialog } from "@/components/agents/plan-day-dialog";
 import { TaskAiPanels } from "@/components/agents/task-ai-panels";
 import { EmptyState } from "@/components/empty-state";
@@ -71,6 +72,7 @@ export function TaskBoard() {
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const [inboxOpen, setInboxOpen] = useState(false);
 
   async function handleStatusChange(id: number, next: TaskStatus) {
     const previous = tasks.find((task) => task.id === id)?.status;
@@ -96,6 +98,10 @@ export function TaskBoard() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button variant="outline" onClick={() => setInboxOpen(true)}>
+            <MessageSquarePlus className="text-ai" />
+            AI inbox
+          </Button>
           <Button variant="outline" onClick={() => setPlanOpen(true)}>
             <CalendarCheck className="text-ai" />
             Plan my day
@@ -138,10 +144,16 @@ export function TaskBoard() {
           description={EMPTY_COPY[status].description}
           action={
             status === "all" ? (
-              <Button variant="outline" onClick={() => setCreateOpen(true)}>
-                <Plus />
-                New task
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setInboxOpen(true)}>
+                  <MessageSquarePlus />
+                  AI inbox
+                </Button>
+                <Button variant="outline" onClick={() => setCreateOpen(true)}>
+                  <Plus />
+                  New task
+                </Button>
+              </div>
             ) : undefined
           }
         />
@@ -161,6 +173,7 @@ export function TaskBoard() {
           setOpenTaskId(id);
         }}
       />
+      <InboxDialog open={inboxOpen} onOpenChange={setInboxOpen} onApplied={reload} />
       <PlanDayDialog open={planOpen} onOpenChange={setPlanOpen} onOpenTask={setOpenTaskId} />
       <TaskDetailDialog
         taskId={openTaskId}

@@ -1,4 +1,5 @@
 import type { Db } from "@/lib/db";
+import { NOTES_MAX } from "@/lib/tasks/types";
 import type {
   SubtaskDraft,
   Task,
@@ -166,6 +167,13 @@ export class TaskRepository {
       )
       .run({ ...changes, id, updatedAt: this.now().toISOString() });
     return this.getById(id);
+  }
+
+  /** Appends a line to the task's progress notes (used when inbox items update existing tasks). */
+  appendNote(id: number, line: string): Task {
+    const task = this.getById(id);
+    const notes = task.notes.trim() ? `${task.notes.trim()}\n${line}` : line;
+    return this.update(id, { notes: notes.slice(-NOTES_MAX) });
   }
 
   /** Deletes a task; its subtasks go with it (ON DELETE CASCADE). */
