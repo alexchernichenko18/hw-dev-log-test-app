@@ -57,7 +57,9 @@ requirements in the task statement.
 5. **The header overflowed on mobile.** At 390px the "New task" button went off-screen. The actions now wrap.
 6. **Small layout fixes:** the model badge wrapped onto three lines; the reasons under "Can wait" were truncated;
    priority selects had different widths in each proposal row; an input placeholder was cut off.
-7. **Grayscale theme.** todo-ai's theme had no color at all (even `destructive` was gray). Semantic tokens were added
+7. **The whole dialog scrolled together** (my review, from a screenshot): a long AI proposal pushed the task form off
+   screen. On desktop the dialog now has a fixed height and each column scrolls on its own; mobile keeps one scroll.
+8. **Grayscale theme.** todo-ai's theme had no color at all (even `destructive` was gray). Semantic tokens were added
    for priority, status and AI, so a high-priority or blocked item stands out in the list.
 
 > **TODO (автор): add here any UI tweaks you make by hand before submitting, as the task expects some manual edits.**
